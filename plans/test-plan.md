@@ -1,79 +1,80 @@
 # Test Plan: User Login and Add Product to Cart
 Site: https://automationexercise.com
-Generated: May 20, 2024
+Generated: 2023-10-25
 
 ## Overview
-This test plan verifies the core authentication and product purchase flow for registered users on AutomationExercise.com. It covers user login validation, searching for products, adding items to the shopping cart, and checking shopping cart counter updates.
+This test plan verifies the core e-commerce functionality of logging into the application using valid and invalid credentials, searching for products, and successfully adding items to the shopping cart. It ensures that the user session is maintained and the cart accurately reflects added items.
 
 ## Test Cases
 
-### TC001 — Successful Login and Add Product to Cart
+### TC001 — Successful User Login with Valid Credentials
 - **Type**: Positive
 - **Priority**: High
 - **Page**: https://automationexercise.com/login
-- **Precondition**: User exists with valid credentials (`testuser@mailinator.com` / `Test@1234`).
+- **Precondition**: User is registered and on the login page
 - **Steps**:
-  1. Navigate to https://automationexercise.com/login.
-  2. Enter `testuser@mailinator.com` into `input[data-qa="login-email"]`.
-  3. Enter `Test@1234` into `input[data-qa="login-password"]`.
-  4. Click `button[data-qa="login-button"]`.
-  5. Navigate to https://automationexercise.com/products.
-  6. Click `button.add-to-cart`.
-  7. Click `a[href="/view_cart"]`.
-- **Selector**: `button.add-to-cart`
-- **Expected Result**: User successfully logs in, adds the item to the cart, and navigates to the cart view.
-- **Assertion**: URL equals https://automationexercise.com/view_cart
+  1. Navigate to https://automationexercise.com/login
+  2. Enter valid email in the login email field
+  3. Enter valid password in the login password field
+  4. Click the login button
+- **Selector**: button[data-qa="login-button"]
+- **Expected Result**: User is successfully logged in and redirected to the home page or account page
+- **Assertion**: URL should be https://automationexercise.com/
 
-### TC002 — Login Attempt with Invalid Credentials
+### TC002 — Failed Login with Invalid Password
 - **Type**: Negative
 - **Priority**: High
 - **Page**: https://automationexercise.com/login
-- **Precondition**: User is on the login page.
+- **Precondition**: User is on the login page
 - **Steps**:
-  1. Navigate to https://automationexercise.com/login.
-  2. Enter `invaliduser@mailinator.com` into `input[data-qa="login-email"]`.
-  3. Enter `WrongPass123` into `input[data-qa="login-password"]`.
-  4. Click `button[data-qa="login-button"]`.
-- **Selector**: `button[data-qa="login-button"]`
-- **Expected Result**: User authentication fails, and user remains on the login page.
-- **Assertion**: URL equals https://automationexercise.com/login
+  1. Navigate to https://automationexercise.com/login
+  2. Enter valid email (testuser@mailinator.com) in the login email field
+  3. Enter incorrect password in the login password field
+  4. Click the login button
+- **Selector**: button[data-qa="login-button"]
+- **Expected Result**: Login fails and an error message is displayed
+- **Assertion**: Text "Your email or password is incorrect!" should be visible
 
-### TC003 — Search Product and Add to Cart After Login
+### TC003 — Search for a Product in the Products Catalog
 - **Type**: Positive
-- **Priority**: Medium
+- **Priority**: High
 - **Page**: https://automationexercise.com/products
-- **Precondition**: User is logged in and navigated to the products page.
+- **Precondition**: User is on the products page
 - **Steps**:
-  1. Navigate to https://automationexercise.com/products.
-  2. Enter product search term in `input#search_input`.
-  3. Click `button#submit_search`.
-  4. Click `button.add-to-cart` on the resulting product.
-- **Selector**: `button#submit_search`
-- **Expected Result**: Search results are displayed and the requested item is added to the cart.
-- **Assertion**: Element `button.add-to-cart` is visible and interactable.
+  1. Navigate to https://automationexercise.com/products
+  2. Enter product keyword into the search input
+  3. Click the search button
+- **Selector**: button#submit_search
+- **Expected Result**: Relevant products matching the search query are displayed on the page
+- **Assertion**: Text "Searched Products" should be visible
 
-### TC004 — Verify Cart Badge Count Update
-- **Type**: Edge Case
-- **Priority**: Medium
+### TC004 — Add Product to Cart from Products Page
+- **Type**: Positive
+- **Priority**: High
 - **Page**: https://automationexercise.com/products
-- **Precondition**: User is logged in and cart is currently empty.
+- **Precondition**: User is viewing products and sees the add to cart button
 - **Steps**:
-  1. Navigate to https://automationexercise.com/products.
-  2. Click `button.add-to-cart`.
-  3. Observe the cart badge indicator element `li#cart_li a span`.
-- **Selector**: `li#cart_li a span`
-- **Expected Result**: Cart count indicator updates dynamically to display the updated total item count.
-- **Assertion**: Element `li#cart_li a span` is visible.
+  1. Navigate to https://automationexercise.com/products
+  2. Locate the first product
+  3. Click the add to cart button
+- **Selector**: button.add-to-cart
+- **Expected Result**: Product is added to the cart and a modal confirms the addition
+- **Assertion**: Cart badge count should update to reflect the added item
 
-### TC005 — Attempt Login with Empty Inputs
-- **Type**: Negative
-- **Priority**: Low
-- **Page**: https://automationexercise.com/login
-- **Precondition**: User is on the login page with clear input fields.
+### TC005 — Verify Item Appears in Shopping Cart
+- **Type**: Positive
+- **Priority**: High
+- **Page**: https://automationexercise.com/view_cart
+- **Precondition**: User has added at least one product to the cart
 - **Steps**:
-  1. Navigate to https://automationexercise.com/login.
-  2. Leave `input[data-qa="login-email"]` empty.
-  3. Leave `input[data-qa="login-password"]` empty.
-  4. Click `button[data-qa="login-button"]`.
-- **Selector**: `button[data-qa="login-button"]`
-- **Expected Result
+  1. Add a product to the cart
+  2. Click on the navigation cart link
+- **Selector**: a[href="/view_cart"]
+- **Expected Result**: User is navigated to the cart page and the added product is listed in the cart table
+- **Assertion**: URL should be https://automationexercise.com/view_cart
+
+## Summary
+- Total Tests: 5
+- High Priority: 5
+- Medium Priority: 0
+- Low Priority: 0

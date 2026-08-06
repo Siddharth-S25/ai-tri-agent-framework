@@ -1,7 +1,9 @@
 // generate.js — CLI Entry Point
+const { runGenerator } = require('./src/agents/generatorAgent');
 const { program } = require('commander');
 const { runPlanner } = require('./src/agents/plannerAgent');
 const chalk = require('chalk');
+
 
 console.log(chalk.blue(`
 ╔══════════════════════════════════════════════╗
@@ -30,5 +32,18 @@ program
       process.exit(1);
     }
   });
+  program
+    .command('generate')
+    .description('Agent 2: Generate POM classes and Playwright specs')
+    .action(async () => {
+      const result = await runGenerator();
+      if (result.success) {
+        console.log(chalk.green('\n✅ Agent 2 Complete!'));
+        console.log(chalk.cyan('Next step: npm test'));
+      } else {
+        console.log(chalk.red('\n❌ Agent 2 Failed'));
+        process.exit(1);
+      }
+    });
 
 program.parse();
