@@ -6,159 +6,279 @@ const { callAI }              = require('../aiClient');
 const { readFile, writeFile } = require('../utils/fileHelper');
 const { showBanner, showAgent, showSuccess, showError, showInfo } = require('../utils/display');
 
-// ── POM Generation Prompt ─────────────────────────────────────
-const POM_PROMPT = `
-You are a senior Playwright automation engineer.
-Generate Page Object Model classes for AutomationExercise.com
+// ── POM Prompt ────────────────────────────────────────────────
+const POM_PROMPT = [
+  'You are a senior Playwright automation engineer.',
+  'Generate a Page Object Model class for SauceDemo.',
+  '',
+  'SITE: https://www.saucedemo.com',
+  '',
+  'CRITICAL OUTPUT RULES:',
+  '1. Output ONLY raw JavaScript code',
+  '2. NO markdown backticks anywhere',
+  '3. NO ```javascript at start',
+  '4. NO ``` at end',
+  '5. Start directly with: const { expect } = require("@playwright/test");',
+  '',
+  'REAL SELECTORS — USE ONLY THESE:',
+  'Login Page:',
+  '  username:     page.locator("#user-name")',
+  '  password:     page.locator("#password")',
+  '  loginButton:  page.locator("#login-button")',
+  '  errorMessage: page.locator("[data-test=error]")',
+  '  inventoryList: page.locator(".inventory_list")',
+  '',
+  'Product Page:',
+  '  inventoryItem:  page.locator(".inventory_item")',
+  '  itemButton:     page.locator(".inventory_item").first().locator("button")',
+  '  cartBadge:      page.locator(".shopping_cart_badge")',
+  '  cartLink:       page.locator(".shopping_cart_link")',
+  '  sortDropdown:   page.locator("[data-test=product-sort-container]")',
+  '',
+  'Cart Page:',
+  '  cartItems:   page.locator(".cart_item")',
+  '  itemName:    page.locator(".inventory_item_name").first()',
+  '  removeBtn:   page.locator(".cart_item").first().locator("button")',
+  '  checkoutBtn: page.locator("[data-test=checkout]")',
+  '',
+  'VALID CREDENTIALS:',
+  '  username: standard_user',
+  '  password: secret_sauce',
+  '',
+  'MANDATORY METHOD NAMES — USE EXACTLY THESE:',
+  '',
+  'LoginPage methods:',
+  '  navigateToLoginPage() — navigate to login page',
+  '  enterEmail(username)  — fill username field',
+  '  enterPassword(pass)   — fill password field',
+  '  clickLoginButton()    — click login button',
+  '  login(user, pass)     — full login flow',
+  '  getErrorMessage()     — return error locator',
+  '  isLoggedIn()          — return true if logged in',
+  '',
+  'ProductPage methods:',
+  '  navigateToProductsPage()   — go to inventory page',
+  '  addFirstProductToCart()    — click first item add button',
+  '  addProductByIndex(index)   — click nth item add button',
+  '  getCartBadge()             — return cart badge locator',
+  '  getCartCount()             — return cart count text',
+  '  goToCart()                 — click cart link',
+  '  sortBy(option)             — select sort option',
+  '  getSearchedProductsHeading() — return title locator',
+  '  searchProduct(name)        — filter by name',
+  '  clickSearchButton()        — no-op for SauceDemo',
+  '',
+  'CartPage methods:',
+  '  navigate()           — go to cart page',
+  '  getCartItems()       — return cart items locator',
+  '  getCartItemCount()   — return count of cart items',
+  '  getFirstProductName() — return first item name text',
+  '  removeFirstItem()    — click remove on first item',
+  '  isEmpty()            — return true if cart empty',
+  '  proceedToCheckout()  — click checkout button',
+  '',
+  'CLASS STRUCTURE:',
+  'class ClassName {',
+  '  constructor(page) {',
+  '    this.page = page;',
+  '    // define locators here',
+  '  }',
+  '  // async methods here',
+  '}',
+  'module.exports = ClassName;',
+].join('\n');
 
-MANDATORY RULES — STRICTLY FOLLOW:
-1. ALWAYS start file with: const { expect } = require('@playwright/test');
-2. NEVER use getByLabel() — always use locator('selector')
-3. Output ONLY raw JavaScript code — NO markdown backticks
-4. NO triple backticks at start or end
-5. Start directly with the require statement
-6. ALWAYS use these EXACT selectors:
+// ── Spec Prompt ───────────────────────────────────────────────
+const SPEC_PROMPT = [
+  'You are a senior Playwright automation engineer.',
+  'Generate a complete Playwright test spec file for SauceDemo.',
+  '',
+  'CRITICAL OUTPUT RULES:',
+  '1. Output ONLY raw JavaScript code',
+  '2. NO markdown backticks anywhere',
+  '3. NO ```javascript at start',
+  '4. NO ``` at end',
+  '5. First line MUST be: const { test, expect } = require("@playwright/test");',
+  '',
+  'MANDATORY IMPORTS — USE EXACTLY:',
+  'const { test, expect } = require("@playwright/test");',
+  'const LoginPage   = require("../../pages/LoginPage");',
+  'const ProductPage = require("../../pages/ProductPage");',
+  'const CartPage    = require("../../pages/CartPage");',
+  '',
+  'CREDENTIALS:',
+  'const USERNAME = process.env.TEST_EMAIL    || "standard_user";',
+  'const PASSWORD = process.env.TEST_PASSWORD || "secret_sauce";',
+  '',
+  'MANDATORY TEST STRUCTURE:',
+  'test.describe("SauceDemo Tests", () => {',
+  '  test.beforeEach(async ({ page }) => {',
+  '    await page.waitForTimeout(2000);',
+  '    await page.goto("https://www.saucedemo.com/");',
+  '    await page.waitForLoadState("domcontentloaded");',
+  '  });',
+  '  // tests here',
+  '});',
+  '',
+  'MANDATORY RULES:',
+  '1. ALWAYS use test.beforeEach — NEVER plain beforeEach',
+  '2. ALWAYS add waitForTimeout(2000) as FIRST line in beforeEach',
+  '3. ALWAYS add page.goto as SECOND line in beforeEach',
+  '4. NEVER use hardcoded selectors — ALWAYS use POM methods',
+  '5. Each test MUST be independent — no test depends on another',
+  '6. ONLY use these URLs:',
+  '   https://www.saucedemo.com/',
+  '   https://www.saucedemo.com/inventory.html',
+  '   https://www.saucedemo.com/cart.html',
+  '   https://www.saucedemo.com/checkout-step-one.html',
+  '',
+  'MANDATORY METHOD NAMES — USE EXACTLY THESE:',
+  'LoginPage:   navigateToLoginPage(), enterEmail(), enterPassword(),',
+  '             clickLoginButton(), getErrorMessage(), isLoggedIn()',
+  'ProductPage: navigateToProductsPage(), addFirstProductToCart(),',
+  '             getCartBadge(), getCartCount(), goToCart()',
+  'CartPage:    navigate(), getCartItems(), getCartItemCount(),',
+  '             removeFirstItem(), isEmpty()',
+  '',
+  'ASSERTIONS TO USE:',
+  '- URL check:     await expect(page).toHaveURL("url")',
+  '- Visible:       await expect(locator).toBeVisible()',
+  '- Text:          await expect(locator).toContainText("text")',
+  '- Count:         await expect(locator).toHaveCount(number)',
+  '- Text exact:    await expect(locator).toHaveText("text")',
+].join('\n');
 
-LOGIN PAGE SELECTORS:
-- Email:    this.page.locator('input[data-qa="login-email"]')
-- Password: this.page.locator('input[data-qa="login-password"]')
-- Button:   this.page.locator('button[data-qa="login-button"]')
-- Error:    this.page.locator('.login-form p')
-
-PRODUCT PAGE SELECTORS:
-- Search:    this.page.locator('input#search_input')
-- SearchBtn: this.page.locator('button#submit_search')
-- AddToCart: this.page.locator('.product-image-wrapper').first().locator('button.add-to-cart')
-- CartBadge: this.page.locator('li#cart_li a span')
-- NavCart:   this.page.locator('a[href="/view_cart"]')
-
-CART PAGE SELECTORS:
-- CartItems:   this.page.locator('tr.cart_product')
-- ProductName: this.page.locator('td.cart_description h4 a').first()
-- DeleteBtn:   this.page.locator('a.cart_quantity_delete').first()
-
-VALID TEST DATA:
-- URL:      https://automationexercise.com
-- Email:    testuser@mailinator.com
-- Password: Test@1234
-
-Generate a class with constructor(page) and async methods.
-Each method does ONE action only.
-Export with module.exports = ClassName;
-`;
-
-// ── Spec Generation Prompt ────────────────────────────────────
-const SPEC_PROMPT = `
-You are a senior Playwright automation engineer.
-Generate a complete Playwright test spec file.
-
-MANDATORY RULES — STRICTLY FOLLOW ALL:
-1. First line MUST be: const { test, expect } = require('@playwright/test');
-2. Import POM: const LoginPage = require('../../pages/LoginPage');
-3. Import POM: const ProductPage = require('../../pages/ProductPage');
-4. Import POM: const CartPage = require('../../pages/CartPage');
-5. Output ONLY raw JavaScript — NO markdown backticks anywhere
-6. NO triple backticks at start or end of file
-7. ALWAYS use test.beforeEach — NEVER plain beforeEach
-8. ALWAYS add await page.waitForTimeout(3000) as FIRST line in beforeEach
-9. ALWAYS add await page.goto('https://automationexercise.com') after timeout
-10. NEVER invent URLs — only use:
-    https://automationexercise.com/
-    https://automationexercise.com/login
-    https://automationexercise.com/products
-    https://automationexercise.com/view_cart
-11. NEVER use hardcoded selectors — always use POM methods
-12. Each test must be completely independent
-
-Use describe block: test.describe('AutomationExercise Tests', () => {})
-`;
-
-// ── Generate POM Classes ──────────────────────────────────────
-async function generatePOMClasses(testPlan) {
-  showAgent('GENERATOR', 'Generating POM Classes...');
-
-  // LoginPage
+// ── Generate LoginPage ────────────────────────────────────────
+async function generateLoginPage() {
   showInfo('Generating LoginPage.js...');
-  const loginMessage = `
-Generate a LoginPage POM class for AutomationExercise.com login page.
-URL: https://automationexercise.com/login
 
-Include these methods:
-- async navigate() — goes to login page
-- async login(email, password) — fills and submits login form
-- async getErrorMessage() — returns login error text
-- async isLoggedIn() — returns true if login successful
+  const message = [
+    'Generate a LoginPage class for SauceDemo login page.',
+    'URL: https://www.saucedemo.com/',
+    '',
+    'Use EXACTLY these method names:',
+    '  navigateToLoginPage()',
+    '  enterEmail(username)',
+    '  enterPassword(password)',
+    '  clickLoginButton()',
+    '  login(username, password)',
+    '  getErrorMessage()',
+    '  isLoggedIn()',
+    '',
+    'Use ONLY these selectors:',
+    '  #user-name',
+    '  #password',
+    '  #login-button',
+    '  [data-test="error"]',
+    '  .inventory_list',
+  ].join('\n');
 
-Use ONLY the selectors from your instructions.
-`;
-  const loginPage = await callAI(POM_PROMPT, loginMessage);
-  writeFile('pages/LoginPage.js', loginPage);
+  const code = await callAI(POM_PROMPT, message);
+  const clean = code.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+  writeFile('pages/LoginPage.js', clean);
   showSuccess('pages/LoginPage.js created');
+}
 
-  // ProductPage
+// ── Generate ProductPage ──────────────────────────────────────
+async function generateProductPage() {
   showInfo('Generating ProductPage.js...');
-  const productMessage = `
-Generate a ProductPage POM class for AutomationExercise.com products page.
-URL: https://automationexercise.com/products
 
-Include these methods:
-- async navigate() — goes to products page
-- async searchProduct(name) — searches for a product
-- async addFirstProductToCart() — adds first product to cart
-- async getCartCount() — returns cart badge count
-- async goToCart() — clicks cart link
+  const message = [
+    'Generate a ProductPage class for SauceDemo inventory page.',
+    'URL: https://www.saucedemo.com/inventory.html',
+    '',
+    'Use EXACTLY these method names:',
+    '  navigateToProductsPage()',
+    '  addFirstProductToCart()',
+    '  addProductByIndex(index)',
+    '  getCartBadge()',
+    '  getCartCount()',
+    '  goToCart()',
+    '  sortBy(option)',
+    '  getSearchedProductsHeading()',
+    '  searchProduct(name)',
+    '  clickSearchButton()',
+    '',
+    'Use ONLY these selectors:',
+    '  .inventory_item',
+    '  .inventory_item button',
+    '  .shopping_cart_badge',
+    '  .shopping_cart_link',
+    '  [data-test="product-sort-container"]',
+    '  .title',
+  ].join('\n');
 
-Use ONLY the selectors from your instructions.
-`;
-  const productPage = await callAI(POM_PROMPT, productMessage);
-  writeFile('pages/ProductPage.js', productPage);
+  const code = await callAI(POM_PROMPT, message);
+  const clean = code.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+  writeFile('pages/ProductPage.js', clean);
   showSuccess('pages/ProductPage.js created');
+}
 
-  // CartPage
+// ── Generate CartPage ─────────────────────────────────────────
+async function generateCartPage() {
   showInfo('Generating CartPage.js...');
-  const cartMessage = `
-Generate a CartPage POM class for AutomationExercise.com cart page.
-URL: https://automationexercise.com/view_cart
 
-Include these methods:
-- async navigate() — goes to cart page
-- async getCartItemCount() — returns number of items in cart
-- async getFirstProductName() — returns first product name
-- async removeFirstItem() — removes first item from cart
-- async isEmpty() — returns true if cart is empty
+  const message = [
+    'Generate a CartPage class for SauceDemo cart page.',
+    'URL: https://www.saucedemo.com/cart.html',
+    '',
+    'Use EXACTLY these method names:',
+    '  navigate()',
+    '  getCartItems()',
+    '  getCartItemCount()',
+    '  getFirstProductName()',
+    '  removeFirstItem()',
+    '  isEmpty()',
+    '  proceedToCheckout()',
+    '',
+    'Use ONLY these selectors:',
+    '  .cart_item',
+    '  .inventory_item_name',
+    '  .cart_item button',
+    '  [data-test="checkout"]',
+    '  [data-test="continue-shopping"]',
+  ].join('\n');
 
-Use ONLY the selectors from your instructions.
-`;
-  const cartPage = await callAI(POM_PROMPT, cartMessage);
-  writeFile('pages/CartPage.js', cartPage);
+  const code = await callAI(POM_PROMPT, message);
+  const clean = code.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+  writeFile('pages/CartPage.js', clean);
   showSuccess('pages/CartPage.js created');
 }
 
-// ── Generate Spec File ────────────────────────────────────────
+// ── Generate Spec ─────────────────────────────────────────────
 async function generateSpec(testPlan) {
   showAgent('GENERATOR', 'Generating Playwright Spec...');
 
-  const specMessage = `
-Here is the test plan to convert into Playwright tests:
+  const message = [
+    'Generate a complete Playwright spec file based on this test plan:',
+    '',
+    testPlan,
+    '',
+    'GENERATE EXACTLY 5 TESTS:',
+     'TC001 — Valid login → assert URL is /inventory.html',
+    ' AND assert .inventory_list is visible',
+    ' DO NOT assert cart badge — cart is empty after login',
+    'TC002 — Invalid login → assert error message visible',
+    'TC003 — Add to cart → assert cart badge shows 1',
+    'TC004 — Verify cart → assert cart has 1 item',
+    'TC005 — Remove from cart → assert cart has 0 items',
+    '',
+    'USE ONLY THESE POM METHODS:',
+    'loginPage.navigateToLoginPage()',
+    'loginPage.enterEmail(USERNAME)',
+    'loginPage.enterPassword(PASSWORD)',
+    'loginPage.clickLoginButton()',
+    'loginPage.getErrorMessage()',
+    'productPage.addFirstProductToCart()',
+    'productPage.getCartBadge()',
+    'productPage.goToCart()',
+    'cartPage.getCartItems()',
+    'cartPage.removeFirstItem()',
+  ].join('\n');
 
-${testPlan}
-
-Generate a complete spec file with:
-1. All 5 test cases from the plan
-2. Use LoginPage and ProductPage POM classes
-3. test.beforeEach with waitForTimeout(3000) and goto
-4. Proper assertions using expect()
-5. Each test independent and complete
-
-CRITICAL: Start with exact imports:
-const { test, expect } = require('@playwright/test');
-const LoginPage = require('../../pages/LoginPage');
-const ProductPage = require('../../pages/ProductPage');
-const CartPage = require('../../pages/CartPage');
-`;
-
-  const spec = await callAI(SPEC_PROMPT, specMessage);
-  writeFile('tests/generated/e2e.spec.js', spec);
+  const code = await callAI(SPEC_PROMPT, message);
+  const clean = code.replace(/```javascript\n?/g, '').replace(/```\n?/g, '').trim();
+  writeFile('tests/generated/e2e.spec.js', clean);
   showSuccess('tests/generated/e2e.spec.js created');
 }
 
@@ -170,12 +290,15 @@ async function runGenerator() {
   try {
     // Step 1 — Plan वाचा
     const testPlan = readFile('plans/test-plan.md');
-    showSuccess(`Test plan loaded — ${testPlan.split('\n').length} lines`);
+    showSuccess('Test plan loaded — ' + testPlan.split('\n').length + ' lines');
 
     // Step 2 — POM Classes बनवा
-    await generatePOMClasses(testPlan);
+    showAgent('GENERATOR', 'Generating POM Classes...');
+    await generateLoginPage();
+    await generateProductPage();
+    await generateCartPage();
 
-    // Step 3 — Spec File बनवा
+    // Step 3 — Spec बनवा
     await generateSpec(testPlan);
 
     // Step 4 — Summary
@@ -188,7 +311,7 @@ async function runGenerator() {
     return { success: true };
 
   } catch (error) {
-    showError(`Generator failed: ${error.message}`);
+    showError('Generator failed: ' + error.message);
     return { success: false, error: error.message };
   }
 }

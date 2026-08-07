@@ -1,35 +1,26 @@
-const { expect } = require('@playwright/test');
+const { expect } = require("@playwright/test");
 
 class ProductPage {
   constructor(page) {
-    this.page           = page;
-    this.inventoryItems = page.locator('.inventory_item');
-    this.addToCartBtn   = page.locator('.inventory_item').first()
-                              .locator('button');
-    this.cartBadge      = page.locator('.shopping_cart_badge');
-    this.navCart        = page.locator('.shopping_cart_link');
-    this.sortDropdown   = page.locator('[data-test="product-sort-container"]');
+    this.page = page;
+    this.inventoryItems = page.locator(".inventory_item");
+    this.addToCartButtons = page.locator(".inventory_item button");
+    this.cartBadge = page.locator(".shopping_cart_badge");
+    this.cartLink = page.locator(".shopping_cart_link");
+    this.sortDropdown = page.locator('[data-test="product-sort-container"]');
+    this.title = page.locator(".title");
   }
 
   async navigateToProductsPage() {
-    await this.page.goto('https://www.saucedemo.com/inventory.html');
-    await this.page.waitForLoadState('domcontentloaded');
-    await this.page.waitForSelector('.inventory_list');
+    await this.page.goto("https://www.saucedemo.com/inventory.html");
   }
 
   async addFirstProductToCart() {
-    await this.page.locator('.inventory_item')
-          .first()
-          .locator('button')
-          .click();
-    await this.page.waitForTimeout(500);
+    await this.addToCartButtons.first().click();
   }
 
-  async addProductByName(name) {
-    const item = this.page.locator('.inventory_item')
-                     .filter({ hasText: name });
-    await item.locator('button').click();
-    await this.page.waitForTimeout(500);
+  async addProductByIndex(index) {
+    await this.addToCartButtons.nth(index).click();
   }
 
   getCartBadge() {
@@ -37,16 +28,11 @@ class ProductPage {
   }
 
   async getCartCount() {
-    const badge = this.cartBadge;
-    if (await badge.isVisible()) {
-      return await badge.textContent();
-    }
-    return '0';
+    return await this.cartBadge.textContent();
   }
 
   async goToCart() {
-    await this.navCart.click();
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.cartLink.click();
   }
 
   async sortBy(option) {
@@ -54,16 +40,21 @@ class ProductPage {
   }
 
   getSearchedProductsHeading() {
-    return this.page.locator('.title');
+    return this.title;
   }
 
   async searchProduct(name) {
-    // SauceDemo ला search नाही — filter करतो
-    return this.page.locator('.inventory_item').filter({ hasText: name });
+    const items = await this.inventoryItems.all();
+    for (const item of items) {
+      const text = await item.textContent();
+      const visible = text && text.toLowerCase().includes(String(name).toLowerCase());
+      await item.evaluate((el, isVisible) => {
+        el.style.display = isVisible ? "" : "none";
+      }, visible);
+    }
   }
 
   async clickSearchButton() {
-    // SauceDemo ला search button नाही
     return;
   }
 }

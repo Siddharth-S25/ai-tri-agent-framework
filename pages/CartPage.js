@@ -1,19 +1,17 @@
-const { expect } = require('@playwright/test');
+const { expect } = require("@playwright/test");
 
 class CartPage {
   constructor(page) {
-    this.page        = page;
-    this.cartItems   = page.locator('.cart_item');
-    this.productName = page.locator('.inventory_item_name').first();
-    this.removeBtn   = page.locator('.cart_item').first()
-                           .locator('button');
+    this.page = page;
+    this.cartItems = page.locator(".cart_item");
+    this.itemName = page.locator(".inventory_item_name").first();
+    this.removeBtn = page.locator(".cart_item button").first();
     this.checkoutBtn = page.locator('[data-test="checkout"]');
-    this.continueBtn = page.locator('[data-test="continue-shopping"]');
+    this.continueShoppingBtn = page.locator('[data-test="continue-shopping"]');
   }
 
   async navigate() {
-    await this.page.goto('https://www.saucedemo.com/cart.html');
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.goto("https://www.saucedemo.com/cart.html");
   }
 
   getCartItems() {
@@ -25,12 +23,11 @@ class CartPage {
   }
 
   async getFirstProductName() {
-    return await this.productName.textContent();
+    return await this.itemName.textContent();
   }
 
   async removeFirstItem() {
     await this.removeBtn.click();
-    await this.page.waitForTimeout(500);
   }
 
   async isEmpty() {
@@ -39,7 +36,6 @@ class CartPage {
 
   async proceedToCheckout() {
     await this.checkoutBtn.click();
-    await this.page.waitForLoadState('domcontentloaded');
   }
 }
 

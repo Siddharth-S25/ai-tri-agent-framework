@@ -1,29 +1,25 @@
-const { expect } = require('@playwright/test');
+const { expect } = require("@playwright/test");
 
 class LoginPage {
   constructor(page) {
-    this.page          = page;
-    this.usernameInput = page.locator('#user-name');
-    this.passwordInput = page.locator('#password');
-    this.loginButton   = page.locator('#login-button');
-    this.errorMessage  = page.locator('[data-test="error"]');
-  }
-
-  async navigate() {
-    await this.page.goto('https://www.saucedemo.com/');
-    await this.page.waitForLoadState('domcontentloaded');
+    this.page = page;
+    this.username = page.locator("#user-name");
+    this.password = page.locator("#password");
+    this.loginButton = page.locator("#login-button");
+    this.errorMessage = page.locator("[data-test=\"error\"]");
+    this.inventoryList = page.locator(".inventory_list");
   }
 
   async navigateToLoginPage() {
-    await this.navigate();
+    await this.page.goto("https://www.saucedemo.com/");
   }
 
   async enterEmail(username) {
-    await this.usernameInput.fill(username);
+    await this.username.fill(username);
   }
 
   async enterPassword(password) {
-    await this.passwordInput.fill(password);
+    await this.password.fill(password);
   }
 
   async clickLoginButton() {
@@ -31,7 +27,7 @@ class LoginPage {
   }
 
   async login(username, password) {
-    await this.navigate();
+    await this.navigateToLoginPage();
     await this.enterEmail(username);
     await this.enterPassword(password);
     await this.clickLoginButton();
@@ -42,7 +38,12 @@ class LoginPage {
   }
 
   async isLoggedIn() {
-    return await this.page.locator('.inventory_list').isVisible();
+    try {
+      await expect(this.inventoryList).toBeVisible();
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 
