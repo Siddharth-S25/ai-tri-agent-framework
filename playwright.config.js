@@ -5,7 +5,11 @@ module.exports = defineConfig({
   timeout:  90000,
   retries:  2,
   workers:  1,
-  reporter: [['html', { outputFolder: 'reports/html' }], ['list']],
+  reporter: [
+                ['html',  { outputFolder: 'reports/html'      }],
+                ['json',  { outputFile:   'reports/results.json' }],
+                ['list']
+              ],
   use: {
     headless:         true,
     screenshot:       'only-on-failure',

@@ -14,14 +14,19 @@ const USE_LOCAL        = process.env.USE_LOCAL_AI     === 'true';
 
 // ── Cloud AI — OpenRouter ──────────────────────────────────────────────────
 async function callCloudAI(systemPrompt, userMessage) {
-  if (!OPENROUTER_KEY) {
+
+  // Dynamic Key — function call होताना घेतो
+  const KEY   = process.env.OPENROUTER_API_KEY;
+  const MODEL = process.env.OPENROUTER_MODEL || 'openrouter/auto';
+
+  if (!KEY) {
     throw new Error('❌ OPENROUTER_API_KEY is missing in your .env file');
   }
 
   const response = await axios.post(
     'https://openrouter.ai/api/v1/chat/completions',
     {
-      model: OPENROUTER_MODEL,
+      model:      MODEL,
       max_tokens: 4000,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -30,7 +35,7 @@ async function callCloudAI(systemPrompt, userMessage) {
     },
     {
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'Authorization': 'Bearer ' + KEY,
         'Content-Type':  'application/json',
         'HTTP-Referer':  'http://localhost',
         'X-Title':       'AI QA Framework'

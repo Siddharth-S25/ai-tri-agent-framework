@@ -3,6 +3,7 @@ const { runGenerator } = require('./src/agents/generatorAgent');
 const { program } = require('commander');
 const { runPlanner } = require('./src/agents/plannerAgent');
 const chalk = require('chalk');
+const { runHealer } = require('./src/agents/healerAgent');
 
 
 console.log(chalk.blue(`
@@ -45,5 +46,19 @@ program
         process.exit(1);
       }
     });
+    program
+      .command('heal')
+      .description('Agent 3: Auto-fix failing tests')
+      .action(async () => {
+        const result = await runHealer();
+        if (result.success) {
+          console.log(chalk.green('\n✅ Agent 3 Complete!'));
+          console.log(chalk.cyan('Healed: ' + result.healed));
+          console.log(chalk.yellow('Manual: ' + result.manual));
+        } else {
+          console.log(chalk.red('\n❌ Agent 3 Failed'));
+          process.exit(1);
+        }
+      });
 
 program.parse();

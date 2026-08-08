@@ -49,7 +49,7 @@ class ProductPage {
       const text = await item.textContent();
       const visible = text && text.toLowerCase().includes(String(name).toLowerCase());
       await item.evaluate((el, isVisible) => {
-        el.style.display = isVisible ? "" : "none";
+        el.style.display = isVisible? "" : "none";
       }, visible);
     }
   }
