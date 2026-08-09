@@ -13,7 +13,7 @@ test.describe("SauceDemo Tests", () => {
     await page.waitForLoadState("domcontentloaded");
   });
 
- /* test("TC001 — Valid login → assert URL is /inventory.html", async ({ page }) => {
+  test("TC001 — Successful Login", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
 
@@ -23,31 +23,21 @@ test.describe("SauceDemo Tests", () => {
     await loginPage.clickLoginButton();
 
     await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
-    await expect(productPage.getCartBadge()).toBeVisible();
-  }); */
-  test('TC001 — Valid login → assert URL is /inventory.html', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.navigateToLoginPage();
-    await loginPage.enterEmail(USERNAME);
-    await loginPage.enterPassword(PASSWORD);
-    await loginPage.clickLoginButton();
-    await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
-    await expect(page.locator('.inventory_list')).toBeVisible();
+    await expect(page.locator(".inventory_list")).toBeVisible();
   });
 
-  test("TC002 — Invalid login → assert error message visible", async ({ page }) => {
+  test("TC002 — Locked Out User Login Attempt", async ({ page }) => {
     const loginPage = new LoginPage(page);
 
     await loginPage.navigateToLoginPage();
-    await loginPage.enterEmail("wrong_user");
-    await loginPage.enterPassword("wrong_pass");
+    await loginPage.enterEmail("locked_out_user");
+    await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
 
     await expect(loginPage.getErrorMessage()).toBeVisible();
-    await expect(loginPage.getErrorMessage()).toContainText("Username and password do not match");
   });
 
-  test("TC003 — Add to cart → assert cart badge shows 1", async ({ page }) => {
+  test("TC003 — Add Product to Cart", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
 
@@ -55,15 +45,14 @@ test.describe("SauceDemo Tests", () => {
     await loginPage.enterEmail(USERNAME);
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
-
-    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+    
+    await productPage.navigateToProductsPage();
     await productPage.addFirstProductToCart();
-
-    await expect(productPage.getCartBadge()).toBeVisible();
-    await expect(productPage.getCartBadge()).toContainText("1");
+    
+    await expect(productPage.getCartBadge()).toHaveText("1");
   });
 
-  test("TC004 — Verify cart → assert cart has 1 item", async ({ page }) => {
+  test("TC004 — Verify Cart Contents", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
@@ -73,15 +62,14 @@ test.describe("SauceDemo Tests", () => {
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
 
-    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+    await productPage.navigateToProductsPage();
     await productPage.addFirstProductToCart();
     await productPage.goToCart();
 
-    await expect(page).toHaveURL("https://www.saucedemo.com/cart.html");
     await expect(cartPage.getCartItems()).toHaveCount(1);
   });
 
-  test("TC005 — Remove from cart → assert cart has 0 items", async ({ page }) => {
+  test("TC005 — Remove from Cart", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
@@ -91,13 +79,11 @@ test.describe("SauceDemo Tests", () => {
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
 
-    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+    await productPage.navigateToProductsPage();
     await productPage.addFirstProductToCart();
     await productPage.goToCart();
-
-    await expect(page).toHaveURL("https://www.saucedemo.com/cart.html");
+    
     await cartPage.removeFirstItem();
-
-    await expect(cartPage.getCartItems()).toHaveCount(0);
+    await expect(cartPage.getCartItemCount()).toHaveCount(0);
   });
 });

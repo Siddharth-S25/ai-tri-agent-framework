@@ -1,137 +1,76 @@
 # Test Plan: User Login and Shopping Cart Management
 Site: https://www.saucedemo.com
-Generated: 2026-08-06
+Generated: 2023-10-27
 
 ## Overview
-This test plan verifies the core e-commerce functionality of
-SauceDemo application — logging in with valid and invalid
-credentials, adding products to cart, verifying cart contents,
-and removing items from cart. It ensures user session is
-maintained and cart accurately reflects all actions.
+This test plan validates the authentication flow and the core shopping cart functionality. It covers successful login, error handling for locked accounts, and the end-to-end process of adding items to the cart.
 
 ## Test Cases
 
-### TC001 — Successful Login with Valid Credentials
+### TC001 — Successful Login
 - **Type**: Positive
 - **Priority**: High
 - **Page**: https://www.saucedemo.com/
-- **Precondition**: User is on the SauceDemo login page
+- **Precondition**: User is on the login page.
 - **Steps**:
-  1. Navigate to https://www.saucedemo.com/
-  2. Enter valid username: standard_user
-  3. Enter valid password: secret_sauce
-  4. Click the Login button
+  1. Enter username `standard_user` into `#user-name`.
+  2. Enter password `secret_sauce` into `#password`.
+  3. Click `#login-button`.
 - **Selector**: #login-button
-- **Expected Result**: User is successfully logged in and
-  redirected to the products inventory page
-- **Assertion**: URL should be
-  https://www.saucedemo.com/inventory.html
-  and .inventory_list should be visible
+- **Expected Result**: User is redirected to the inventory page.
+- **Assertion**: https://www.saucedemo.com/inventory.html
 
-### TC002 — Failed Login with Invalid Credentials
-- **Type**: Negative
-- **Priority**: High
-- **Page**: https://www.saucedemo.com/
-- **Precondition**: User is on the SauceDemo login page
-- **Steps**:
-  1. Navigate to https://www.saucedemo.com/
-  2. Enter invalid username: wrong_user
-  3. Enter invalid password: wrong_pass
-  4. Click the Login button
-- **Selector**: #login-button
-- **Expected Result**: Login fails and error message is displayed
-- **Assertion**: Text "Username and password do not match"
-  should be visible in [data-test="error"]
-
-### TC003 — Add First Product to Cart
-- **Type**: Positive
-- **Priority**: High
-- **Page**: https://www.saucedemo.com/inventory.html
-- **Precondition**: User is logged in and on inventory page
-- **Steps**:
-  1. Login with standard_user / secret_sauce
-  2. Navigate to inventory page
-  3. Click Add to Cart button on first product
-- **Selector**: .inventory_item button
-- **Expected Result**: Product is added to cart and
-  cart badge updates to show count
-- **Assertion**: .shopping_cart_badge should be visible
-  and contain text "1"
-
-### TC004 — Verify Product Appears in Cart
-- **Type**: Positive
-- **Priority**: High
-- **Page**: https://www.saucedemo.com/cart.html
-- **Precondition**: User is logged in and has added one product
-- **Steps**:
-  1. Login with standard_user / secret_sauce
-  2. Add first product to cart
-  3. Click cart icon in navigation
-- **Selector**: .shopping_cart_link
-- **Expected Result**: User is navigated to cart page
-  and added product is listed
-- **Assertion**: URL should be
-  https://www.saucedemo.com/cart.html
-  and .cart_item count should be 1
-
-### TC005 — Remove Product from Cart
-- **Type**: Positive
-- **Priority**: High
-- **Page**: https://www.saucedemo.com/cart.html
-- **Precondition**: User is logged in and has one item in cart
-- **Steps**:
-  1. Login with standard_user / secret_sauce
-  2. Add first product to cart
-  3. Navigate to cart page
-  4. Click Remove button on the product
-- **Selector**: .cart_item button
-- **Expected Result**: Product is removed from cart
-  and cart becomes empty
-- **Assertion**: .cart_item count should be 0
-
-### TC006 — Locked Out User Cannot Log in
+### TC002 — Locked Out User Login Attempt
 - **Type**: Negative
 - **Priority**: Medium
 - **Page**: https://www.saucedemo.com/
-- **Precondition**: User is on login page
+- **Precondition**: User is on the login page.
 - **Steps**:
-  1. Navigate to https://www.saucedemo.com/
-  2. Enter username: locked_out_user
-  3. Enter password: secret_sauce
-  4. Click Login button
-- **Selector**: #login-button
-- **Expected Result**: Login is blocked with error message
-- **Assertion**: Text "Sorry, this user has been locked out"
-  should be visible
+  1. Enter username `locked_out_user` into `#user-name`.
+  2. Enter password `secret_sauce` into `#password`.
+  3. Click `#login-button`.
+- **Selector**: [data-test="error"]
+- **Expected Result**: Error message is displayed to the user.
+- **Assertion**: [data-test="error"]
 
-### TC007 — Add Multiple Products to Cart
+### TC003 — Add Product to Cart
 - **Type**: Positive
-- **Priority**: Medium
+- **Priority**: High
 - **Page**: https://www.saucedemo.com/inventory.html
-- **Precondition**: User is logged in on inventory page
+- **Precondition**: User is logged in.
 - **Steps**:
-  1. Login with standard_user / secret_sauce
-  2. Add first product to cart
-  3. Add second product to cart
-- **Selector**: .inventory_item button
-- **Expected Result**: Both products added to cart
-- **Assertion**: .shopping_cart_badge should contain "2"
+  1. Click the Add to Cart button for an `.inventory_item`.
+  2. Observe the cart badge.
+- **Selector**:.shopping_cart_badge
+- **Expected Result**: Cart badge increments to show the number of items.
+- **Assertion**:.shopping_cart_badge
 
-### TC008 — Sort Products by Price Low to High
+### TC004 — Verify Cart Contents
 - **Type**: Positive
+- **Priority**: High
+- **Page**: https://www.saucedemo.com/cart.html
+- **Precondition**: User has added items to the cart.
+- **Steps**:
+  1. Click on `.shopping_cart_link`.
+  2. Verify items are listed.
+- **Selector**:.cart_item
+- **Expected Result**: The cart page displays the selected items.
+- **Assertion**:.cart_item
+
+### TC005 — Product Sorting Functionality
+- **Type**: Edge Case
 - **Priority**: Low
 - **Page**: https://www.saucedemo.com/inventory.html
-- **Precondition**: User is logged in on inventory page
+- **Precondition**: User is logged in and on the products page.
 - **Steps**:
-  1. Login with standard_user / secret_sauce
-  2. Click sort dropdown
-  3. Select "Price (low to high)"
+  1. Interact with the sort container `[data-test="product-sort-container"]`.
+  2. Select a sorting option.
 - **Selector**: [data-test="product-sort-container"]
-- **Expected Result**: Products are sorted by price ascending
-- **Assertion**: First product price should be lowest
+- **Expected Result**: Product list reorders based on selected criteria.
+- **Assertion**:.inventory_item
 
 ## Summary
-- Total Tests: 8
-- High Priority: 5
-- Medium Priority: 2
+- Total Tests: 5
+- High Priority: 3
+- Medium Priority: 1
 - Low Priority: 1

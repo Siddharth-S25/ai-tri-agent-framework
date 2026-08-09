@@ -3,12 +3,12 @@ const { expect } = require("@playwright/test");
 class ProductPage {
   constructor(page) {
     this.page = page;
-    this.inventoryItems = page.locator(".inventory_item");
-    this.addToCartButtons = page.locator(".inventory_item button");
+    this.inventoryItem = page.locator(".inventory_item");
+    this.itemButton = page.locator(".inventory_item").first().locator("button");
     this.cartBadge = page.locator(".shopping_cart_badge");
     this.cartLink = page.locator(".shopping_cart_link");
-    this.sortDropdown = page.locator('[data-test="product-sort-container"]');
-    this.title = page.locator(".title");
+    this.sortDropdown = page.locator("[data-test=product-sort-container]");
+    this.productsHeading = page.locator(".title");
   }
 
   async navigateToProductsPage() {
@@ -16,11 +16,11 @@ class ProductPage {
   }
 
   async addFirstProductToCart() {
-    await this.addToCartButtons.first().click();
+    await this.inventoryItem.first().locator("button").click();
   }
 
   async addProductByIndex(index) {
-    await this.addToCartButtons.nth(index).click();
+    await this.inventoryItem.nth(index).locator("button").click();
   }
 
   getCartBadge() {
@@ -40,22 +40,19 @@ class ProductPage {
   }
 
   getSearchedProductsHeading() {
-    return this.title;
+    return this.productsHeading;
   }
 
   async searchProduct(name) {
-    const items = await this.inventoryItems.all();
-    for (const item of items) {
-      const text = await item.textContent();
-      const visible = text && text.toLowerCase().includes(String(name).toLowerCase());
-      await item.evaluate((el, isVisible) => {
-        el.style.display = isVisible? "" : "none";
-      }, visible);
+    // SauceDemo does not have a functional search bar, implementing as placeholder for required interface
+    const searchInput = this.page.locator('[data-test="search-input"]');
+    if (await searchInput.isVisible()) {
+      await searchInput.fill(name);
     }
   }
 
   async clickSearchButton() {
-    return;
+    // No-op as per instructions
   }
 }
 

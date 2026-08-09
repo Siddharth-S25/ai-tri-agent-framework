@@ -5,9 +5,9 @@ class CartPage {
     this.page = page;
     this.cartItems = page.locator(".cart_item");
     this.itemName = page.locator(".inventory_item_name").first();
-    this.removeBtn = page.locator(".cart_item button").first();
-    this.checkoutBtn = page.locator('[data-test="checkout"]');
-    this.continueShoppingBtn = page.locator('[data-test="continue-shopping"]');
+    this.removeBtn = page.locator(".cart_item").first().locator("button");
+    this.checkoutBtn = page.locator("[data-test='checkout']");
+    this.continueShoppingBtn = page.locator("[data-test='continue-shopping']");
   }
 
   async navigate() {
@@ -18,12 +18,12 @@ class CartPage {
     return this.cartItems;
   }
 
-  async getCartItemCount() {
-    return await this.cartItems.count();
+  getCartItemCount() {
+    return this.cartItems;
   }
 
   async getFirstProductName() {
-    return await this.itemName.textContent();
+    return await this.itemName.innerText();
   }
 
   async removeFirstItem() {
@@ -31,7 +31,7 @@ class CartPage {
   }
 
   async isEmpty() {
-    return (await this.cartItems.count()) === 0;
+    return await this.cartItems.count() === 0;
   }
 
   async proceedToCheckout() {
