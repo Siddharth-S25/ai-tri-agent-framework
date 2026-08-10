@@ -1,76 +1,78 @@
-# Test Plan: User Login and Shopping Cart Management
+# Test Plan: Login and Shopping Cart Management
 Site: https://www.saucedemo.com
-Generated: 2023-10-27
+Generated: 2026-08-10
 
 ## Overview
-This test plan validates the authentication flow and the core shopping cart functionality. It covers successful login, error handling for locked accounts, and the end-to-end process of adding items to the cart.
+This test plan verifies the login functionality and shopping cart operations on SauceDemo. It covers positive, negative, and edge case scenarios using the specified URLs and selectors.
 
 ## Test Cases
 
-### TC001 — Successful Login
+### TC001 — Successful Login and Add Item to Cart
 - **Type**: Positive
 - **Priority**: High
 - **Page**: https://www.saucedemo.com/
 - **Precondition**: User is on the login page.
 - **Steps**:
-  1. Enter username `standard_user` into `#user-name`.
-  2. Enter password `secret_sauce` into `#password`.
-  3. Click `#login-button`.
-- **Selector**: #login-button
-- **Expected Result**: User is redirected to the inventory page.
-- **Assertion**: https://www.saucedemo.com/inventory.html
+  1. Enter username `standard_user` in the field with selector `#user-name`.
+  2. Enter password `secret_sauce` in the field with selector `#password`.
+  3. Click the login button with selector `#login-button`.
+  4. Click the first "Add to cart" button within an element matching selector `.inventory_item button`.
+- **Selector**: `.inventory_item button`
+- **Expected Result**: User is redirected to the inventory page and the cart badge shows `1`.
+- **Assertion**: URL equals `https://www.saucedemo.com/inventory.html` and `.shopping_cart_badge` text equals `1`.
 
-### TC002 — Locked Out User Login Attempt
-- **Type**: Negative
+### TC002 — Remove Item from Cart
+- **Type**: Positive
 - **Priority**: Medium
+- **Page**: https://www.saucedemo.com/cart.html
+- **Precondition**: User has at least one item in the cart.
+- **Steps**:
+  1. Click the cart link with selector `.shopping_cart_link`.
+  2. Click the "Remove" button on the cart item with selector `.cart_item button`.
+- **Selector**: `.cart_item button`
+- **Expected Result**: Cart becomes empty and the cart badge disappears.
+- **Assertion**: `.shopping_cart_badge` is not present.
+
+### TC003 — Login with Locked User
+- **Type**: Negative
+- **Priority**: High
 - **Page**: https://www.saucedemo.com/
 - **Precondition**: User is on the login page.
 - **Steps**:
-  1. Enter username `locked_out_user` into `#user-name`.
-  2. Enter password `secret_sauce` into `#password`.
-  3. Click `#login-button`.
-- **Selector**: [data-test="error"]
-- **Expected Result**: Error message is displayed to the user.
-- **Assertion**: [data-test="error"]
+  1. Enter username `locked_out_user` in the field with selector `#user-name`.
+  2. Enter password `secret_sauce` in the field with selector `#password`.
+  3. Click the login button with selector `#login-button`.
+- **Selector**: `[data-test="error"]`
+- **Expected Result**: An error message appears indicating the user is locked out.
+- **Assertion**: Text of `[data-test="error"]` equals `Epic sadface: Sorry, this user has been locked out.`
 
-### TC003 — Add Product to Cart
-- **Type**: Positive
+### TC004 — Login with Incorrect Credentials
+- **Type**: Negative
 - **Priority**: High
-- **Page**: https://www.saucedemo.com/inventory.html
-- **Precondition**: User is logged in.
+- **Page**: https://www.saucedemo.com/
+- **Precondition**: User is on the login page.
 - **Steps**:
-  1. Click the Add to Cart button for an `.inventory_item`.
-  2. Observe the cart badge.
-- **Selector**:.shopping_cart_badge
-- **Expected Result**: Cart badge increments to show the number of items.
-- **Assertion**:.shopping_cart_badge
+  1. Enter username `wrong_user` in the field with selector `#user-name`.
+  2. Enter password `wrong_pass` in the field with selector `#password`.
+  3. Click the login button with selector `#login-button`.
+- **Selector**: `[data-test="error"]`
+- **Expected Result**: An error message appears indicating invalid credentials.
+- **Assertion**: Text of `[data-test="error"]` equals `Epic sadface: Username and password do not match any user in this service`.
 
-### TC004 — Verify Cart Contents
-- **Type**: Positive
-- **Priority**: High
-- **Page**: https://www.saucedemo.com/cart.html
-- **Precondition**: User has added items to the cart.
-- **Steps**:
-  1. Click on `.shopping_cart_link`.
-  2. Verify items are listed.
-- **Selector**:.cart_item
-- **Expected Result**: The cart page displays the selected items.
-- **Assertion**:.cart_item
-
-### TC005 — Product Sorting Functionality
+### TC005 — Add Same Item Twice and Verify Cart Badge Count
 - **Type**: Edge Case
-- **Priority**: Low
+- **Priority**: Medium
 - **Page**: https://www.saucedemo.com/inventory.html
-- **Precondition**: User is logged in and on the products page.
+- **Precondition**: User is logged in and on the inventory page.
 - **Steps**:
-  1. Interact with the sort container `[data-test="product-sort-container"]`.
-  2. Select a sorting option.
-- **Selector**: [data-test="product-sort-container"]
-- **Expected Result**: Product list reorders based on selected criteria.
-- **Assertion**:.inventory_item
+  1. Click the "Add to cart" button for a specific item twice using selector `.inventory_item button`.
+  2. Verify the cart badge with selector `.shopping_cart_badge` shows `2`.
+- **Selector**: `.shopping_cart_badge`
+- **Expected Result**: Cart badge displays the correct count of items added.
+- **Assertion**: Text of `.shopping_cart_badge` equals `2`.
 
 ## Summary
 - Total Tests: 5
 - High Priority: 3
-- Medium Priority: 1
-- Low Priority: 1
+- Medium Priority: 2
+- Low Priority: 0

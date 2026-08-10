@@ -4,11 +4,10 @@ class ProductPage {
   constructor(page) {
     this.page = page;
     this.inventoryItem = page.locator(".inventory_item");
-    this.itemButton = page.locator(".inventory_item").first().locator("button");
+    this.addButton = page.locator(".inventory_item").first().locator("button");
     this.cartBadge = page.locator(".shopping_cart_badge");
     this.cartLink = page.locator(".shopping_cart_link");
     this.sortDropdown = page.locator("[data-test=product-sort-container]");
-    this.productsHeading = page.locator(".title");
   }
 
   async navigateToProductsPage() {
@@ -16,11 +15,12 @@ class ProductPage {
   }
 
   async addFirstProductToCart() {
-    await this.inventoryItem.first().locator("button").click();
+    await this.addButton.click();
   }
 
-  async addProductByIndex(index) {
-    await this.inventoryItem.nth(index).locator("button").click();
+  async addProductByIndex(idx) {
+    const button = this.inventoryItem.nth(idx).locator("button");
+    await button.click();
   }
 
   getCartBadge() {
@@ -40,19 +40,7 @@ class ProductPage {
   }
 
   getSearchedProductsHeading() {
-    return this.productsHeading;
-  }
-
-  async searchProduct(name) {
-    // SauceDemo does not have a functional search bar, implementing as placeholder for required interface
-    const searchInput = this.page.locator('[data-test="search-input"]');
-    if (await searchInput.isVisible()) {
-      await searchInput.fill(name);
-    }
-  }
-
-  async clickSearchButton() {
-    // No-op as per instructions
+    return this.page.locator(".inventory_header");
   }
 }
 

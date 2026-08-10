@@ -6,8 +6,7 @@ class CartPage {
     this.cartItems = page.locator(".cart_item");
     this.itemName = page.locator(".inventory_item_name").first();
     this.removeBtn = page.locator(".cart_item").first().locator("button");
-    this.checkoutBtn = page.locator("[data-test='checkout']");
-    this.continueShoppingBtn = page.locator("[data-test='continue-shopping']");
+    this.checkoutBtn = page.locator("[data-test=checkout]");
   }
 
   async navigate() {
@@ -18,20 +17,20 @@ class CartPage {
     return this.cartItems;
   }
 
-  getCartItemCount() {
+  isEmpty() {
     return this.cartItems;
   }
 
+  async getCartItemCount() {
+    return await this.cartItems.count();
+  }
+
   async getFirstProductName() {
-    return await this.itemName.innerText();
+    return await this.itemName.textContent();
   }
 
   async removeFirstItem() {
     await this.removeBtn.click();
-  }
-
-  async isEmpty() {
-    return await this.cartItems.count() === 0;
   }
 
   async proceedToCheckout() {

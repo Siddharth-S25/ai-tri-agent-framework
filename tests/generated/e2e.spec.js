@@ -13,11 +13,10 @@ test.describe("SauceDemo Tests", () => {
     await page.waitForLoadState("domcontentloaded");
   });
 
-  test("TC001 — Successful Login", async ({ page }) => {
+  test("TC001 — Valid login — assert URL is /inventory.html and .inventory_list visible", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
 
-    await loginPage.navigateToLoginPage();
     await loginPage.enterEmail(USERNAME);
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
@@ -26,10 +25,9 @@ test.describe("SauceDemo Tests", () => {
     await expect(page.locator(".inventory_list")).toBeVisible();
   });
 
-  test("TC002 — Locked Out User Login Attempt", async ({ page }) => {
+  test("TC002 — Locked user login — assert error message visible", async ({ page }) => {
     const loginPage = new LoginPage(page);
 
-    await loginPage.navigateToLoginPage();
     await loginPage.enterEmail("locked_out_user");
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
@@ -37,53 +35,47 @@ test.describe("SauceDemo Tests", () => {
     await expect(loginPage.getErrorMessage()).toBeVisible();
   });
 
-  test("TC003 — Add Product to Cart", async ({ page }) => {
+  test("TC003 — Add to cart — assert cart badge shows 1", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
 
-    await loginPage.navigateToLoginPage();
     await loginPage.enterEmail(USERNAME);
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
-    
-    await productPage.navigateToProductsPage();
+
     await productPage.addFirstProductToCart();
-    
+
     await expect(productPage.getCartBadge()).toHaveText("1");
   });
 
-  test("TC004 — Verify Cart Contents", async ({ page }) => {
+  test("TC004 — Verify cart — navigate to cart, assert 1 item", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
 
-    await loginPage.navigateToLoginPage();
     await loginPage.enterEmail(USERNAME);
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
 
-    await productPage.navigateToProductsPage();
     await productPage.addFirstProductToCart();
     await productPage.goToCart();
 
     await expect(cartPage.getCartItems()).toHaveCount(1);
   });
 
-  test("TC005 — Remove from Cart", async ({ page }) => {
+  test("TC005 — Remove from cart — add item, go to cart, remove, assert isEmpty() count is 0", async ({ page }) => {
     const loginPage = new LoginPage(page);
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
 
-    await loginPage.navigateToLoginPage();
     await loginPage.enterEmail(USERNAME);
     await loginPage.enterPassword(PASSWORD);
     await loginPage.clickLoginButton();
 
-    await productPage.navigateToProductsPage();
     await productPage.addFirstProductToCart();
     await productPage.goToCart();
-    
+
     await cartPage.removeFirstItem();
-    await expect(cartPage.getCartItemCount()).toHaveCount(0);
+    await expect(cartPage.isEmpty()).toHaveCount(0);
   });
 });
